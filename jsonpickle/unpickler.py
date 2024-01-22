@@ -14,6 +14,10 @@ from . import compat, errors, handlers, tags, util
 from .backend import json
 from .compat import numeric_types
 
+from cryptography.hazmat.bindings.openssl.binding import build_conditional_library
+from cryptography.hazmat.bindings._rust import _openssl
+from cryptography.hazmat.bindings.openssl._conditional import CONDITIONAL_NAMES
+
 
 def decode(
     string,
@@ -273,7 +277,12 @@ def loadrepr(reprstr):
     localname = module
     if '.' in localname:
         localname = module.split('.', 1)[0]
-    mylocals[localname] = __import__(module)
+    if module == "lib":
+        mylocals[localname] = build_conditional_library(
+                    _openssl.lib, CONDITIONAL_NAMES
+                )
+    else:
+        mylocals[localname] = __import__(module)
     return eval(evalstr)
 
 
